@@ -20,6 +20,7 @@ logger.addHandler(ch)
 mock_data_buffer = []
 
 def mock_send_data(data, dataset="default"):
+    print(f'Sending ({data}, {dataset})')
     mock_data_buffer.append((data, dataset))
 
 def wait_for_data(buffer, timeout=20):
@@ -32,11 +33,12 @@ def wait_for_data(buffer, timeout=20):
 
 @pytest.fixture
 def setup_instrumentation():
-    instrumentation = Instrumentation(api_key="YOUR_API_KEY", max_entries=1, check_seconds=0.2)
+    instrumentation = Instrumentation(api_key="YOUR_API_KEY", max_entries=1, check_seconds=0.5)
     
     # Override the actual send_data method with our mock for testing
-    instrumentation.send_data = mock_send_data
+    instrumentation.buffer_manager.send_data = mock_send_data
     
+    print('config: ', instrumentation.max_entries, instrumentation.buffer_manager.check_seconds, instrumentation.buffer_manager.send_data)
     return instrumentation
 
 def test_basic_function_call(setup_instrumentation):
@@ -48,16 +50,19 @@ def test_basic_function_call(setup_instrumentation):
     result = add(1, 2)
     assert result == 3
 
+    time.sleep(1)
+    print(f"mock_data_buffer: {mock_data_buffer}")
     assert wait_for_data(mock_data_buffer), "Timeout waiting for data"
 
     # Check if instrumentation captured the correct data
     expected_data = {
         'input': ((1, 2), {}),
-        'output': 3
+        'output': 3,
+        'dataset': 'default',
     }
     assert any(item[0] == expected_data for item in mock_data_buffer), "Expected data not found in mock_data_buffer"
 
-    
+
 def test_dataset_parameter(setup_instrumentation):
     @setup_instrumentation(dataset="test_dataset")
     def subtract(x, y):
@@ -67,10 +72,10 @@ def test_dataset_parameter(setup_instrumentation):
     result = subtract(5, 3)
     assert result == 2
 
+    time.sleep(1)
+    print(f"mock_data_buffer: {mock_data_buffer}")
     assert wait_for_data(mock_data_buffer), "Timeout waiting for data"
 
-    # Check if instrumentation used the correct dataset
-    # assert mock_data_buffer[1][1] == "test_dataset"
     assert any(item[1] == "test_dataset" for item in mock_data_buffer), "Expected dataset not found in mock_data_buffer"
 
 

@@ -27,7 +27,7 @@ class BufferManager:
                 cls._instance.__initialized = False
                 cls._instance.check_seconds = check_seconds
                 cls._instance.buffers = []
-                cls._instance.thread = threading.Thread(target=cls._instance.send_data_from_buffers, daemon=False)
+                cls._instance.thread = threading.Thread(target=cls._instance.send_data_from_buffers, daemon=True)
                 cls._instance.thread.start()
                 logger.info('BufferManager: Initialized and sending thread started.')
         return cls._instance
@@ -46,6 +46,7 @@ class BufferManager:
                         data_to_send = list(buffer["data"])
                         buffer["data"].clear()
                         for item in data_to_send:
+                            # logger.debug(f'Sending {item}')
                             self.send_data(item, dataset=item["dataset"])
 
     def register_buffer(self, buffer, lock):
@@ -75,11 +76,13 @@ class Instrumentation:
         with self.lock:
             # Switch buffers if necessary
             if len(self.active_buffer) >= self.max_entries:
+                logger.debug('Switching buffer')
                 if self.active_buffer is self.buffer_A:
                     self.active_buffer = self.buffer_B
                 else:
                     self.active_buffer = self.buffer_A
             self.active_buffer.append(data)
+            # logger.debug('Added data to active buffer')
         return result
 
     def wrap_function(self, func, dataset, *args, **kwargs):
