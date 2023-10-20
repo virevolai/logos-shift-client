@@ -6,8 +6,8 @@ import logging
 import time
 
 logger = logging.getLogger(__name__)
-MAX_ENTRIES = 2
-CHECK_SECONDS = 0.5 
+MAX_ENTRIES = 10
+CHECK_SECONDS = 5 
 
 class BufferManager:
     # Implementing Singleton pattern
@@ -20,11 +20,12 @@ class BufferManager:
         self.check_seconds = check_seconds
         self.__initialized = True
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, check_seconds=CHECK_SECONDS, *args, **kwargs):
         with cls.lock:
             if not cls._instance:
                 cls._instance = super(BufferManager, cls).__new__(cls)
                 cls._instance.__initialized = False
+                cls._instance.check_seconds = check_seconds
                 cls._instance.buffers = []  # List to store all active buffers
                 cls._instance.thread = threading.Thread(target=cls._instance.send_data_from_buffers, daemon=True)
                 cls._instance.thread.start()
