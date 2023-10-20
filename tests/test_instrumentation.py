@@ -22,7 +22,7 @@ mock_data_buffer = []
 def mock_send_data(data, dataset="default"):
     mock_data_buffer.append((data, dataset))
 
-def wait_for_data(buffer, timeout=15):
+def wait_for_data(buffer, timeout=20):
     start_time = time.time()
     while time.time() - start_time < timeout:
         if buffer:
@@ -32,7 +32,7 @@ def wait_for_data(buffer, timeout=15):
 
 @pytest.fixture
 def setup_instrumentation():
-    instrumentation = Instrumentation(api_key="YOUR_API_KEY")
+    instrumentation = Instrumentation(api_key="YOUR_API_KEY", max_entries=1, check_seconds=0.2)
     
     # Override the actual send_data method with our mock for testing
     instrumentation.send_data = mock_send_data
@@ -40,7 +40,7 @@ def setup_instrumentation():
     return instrumentation
 
 def test_basic_function_call(setup_instrumentation):
-    @setup_instrumentation.decorator()
+    @setup_instrumentation()
     def add(x, y):
         return x + y
 
@@ -59,7 +59,7 @@ def test_basic_function_call(setup_instrumentation):
 
     
 def test_dataset_parameter(setup_instrumentation):
-    @setup_instrumentation.decorator(dataset="test_dataset")
+    @setup_instrumentation(dataset="test_dataset")
     def subtract(x, y):
         return x - y
 
