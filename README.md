@@ -56,28 +56,28 @@ Here's a high-level overview:
 
 ```mermaid
 graph LR
-    A[Client Application]
-    B[Logos Shift Client]
-    C[Buffer Manager Thread]
-    D[Logos Server]
-    E[Expensive LLM Client]
-    F[Cheap LLM Client]
-    G[API Router A/B Test Rollout]
+    A["Client Application"]
+    B["Logos Shift Client"]
+    C["Buffer Manager Thread"]
+    D["Logos Server"]
+    E["Expensive LLM Client"]
+    F["Cheap LLM Client"]
+    G["API Router A/B Test Rollout"]
 
-    A -->|Function Call| B
-    B -->|Capture & Buffer Data| C
-    C -->|Send Data| D
-    B -->|Route API Call| G
-    G -->|Expensive API Route| E
-    G -->|Cheap API Route| F
+    A -->|"Function Call"| B
+    B -->|"Capture & Buffer Data"| C
+    C -->|"Send Data"| D
+    B -->|"Route API Call"| G
+    G -->|"Expensive API Route"| E
+    G -->|"Cheap API Route"| F
 
-    classDef default fill:#0077b6,stroke:#004c8c,stroke-width:2px,color:#fff;
+    classDef mainClass fill:#0077b6,stroke:#004c8c,stroke-width:2px,color:#fff;
     classDef api fill:#90e0ef,stroke:#0077b6,stroke-width:2px,color:#333;
     classDef buffer fill:#48cae4,stroke:#0077b6,stroke-width:2px,color:#333;
     classDef expensive fill:#d00000,stroke:#9d0208,stroke-width:2px,color:#fff;
     classDef cheap fill:#52b788,stroke:#0077b6,stroke-width:2px,color:#333;
-    
-    class A,B,D,G default
+
+    class A,B,D,G mainClass
     class E expensive
     class F cheap
     class C buffer
