@@ -13,8 +13,11 @@ This is designed to switch your expensive model with a fine tuned model
 - **Feedback Support**: Provide feedback on whether a result was successful or not based on its unique ID. This is used to finetune your model.
 - **Truly Open Source**: Extend and modify as per your requirements.
 - **Upcoming Features**:
-  - Ability to report the success or failure of a response based on its ID.
-  - Configuration retrieval every few minutes.
+  - Dynamic configuration from the server.
+
+## Why
+
+![sergey](assets/images/sergey.png)
 
 ## Getting Started
 
