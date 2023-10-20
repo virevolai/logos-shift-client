@@ -55,26 +55,28 @@ instrumentation.provide_feedback(result['bohita_logos_shift_id', "success")
 Here's a high-level overview:
 
 ```mermaid
-graph TD
+graph LR
     A[Client Application]
-    B[Instrumented Function]
-    C[Logos Shift Client]
-    D[Buffer Manager]
-    E[Data Buffer]
-    F[Send Data]
+    B[Logos Shift Client]
+    C[Buffer Manager (Thread)]
+    D[Logos Server]
+    E[Expensive LLM Client]
+    F[Cheap LLM Client]
+    G[API Router (A/B Test Rollout)]
 
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-    E --> F
+    A -->|Function Call| B
+    B -->|Capture & Buffer Data| C
+    C -->|Send Data| D
+    B -->|Route API Call| G
+    G -->|Expensive API Route| E
+    G -->|Cheap API Route| F
 
-    style A fill:#2d2d2d,stroke:#666,stroke-width:2px,color:#fff
-    style B fill:#4a4a4a,stroke:#666,stroke-width:2px,color:#fff
-    style C fill:#616161,stroke:#666,stroke-width:2px,color:#fff
-    style D fill:#7a7a7a,stroke:#666,stroke-width:2px,color:#fff
-    style E fill:#8e8e8e,stroke:#666,stroke-width:2px,color:#fff
-    style F fill:#a3a3a3,stroke:#666,stroke-width:2px,color:#fff
+    classDef default fill:#2d2d2d,stroke:#666,stroke-width:2px,color:#fff;
+    classDef api fill:#616161,stroke:#666,stroke-width:2px,color:#fff;
+    classDef buffer fill:#7a7a7a,stroke:#666,stroke-width:2px,color:#fff;
+    class A,B,C,D,G default
+    class E,F api
+    class C buffer
 ```
 
 
