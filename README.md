@@ -10,7 +10,7 @@ This is designed to switch your expensive model with a fine tuned model
 
 - **No Proxying**: Direct calls without the overhead of proxying, ensuring no additional latency.
 - **Keep Your OpenAI Key**: We don't need access to your OpenAI key. Ensure it stays confidential and with you.
-- **Feedback Support**: Provide feedback on whether a result was successful or not based on its unique ID. This is used to finetune your model.
+- **Feedback Support**: Provide feedback on whether a result was successful or not based on its unique ID. This is used to have better finetunes for your model.
 - **Truly Open Source**: Extend and modify as per your requirements.
 - **Upcoming Features**:
   - Dynamic configuration from the server.
@@ -96,11 +96,13 @@ def multiply(x, y, logos_shift_metadata={"user_id": "12345"}):
 
 ## Feedback
 
-Logos Shift will soon support a feature where you can provide feedback on whether a result was successful or not based on its ID for finetuning. Stay tuned!
+Using feedback you can get better models that will be cheaper and more effective.
+
+If you don't have feedback, it will be auto-regressive as usual.
 
 ## Configuration Retrieval
 
-The library will also support retrieving configurations every `n` minutes, ensuring your instrumentation adapts to dynamic environments.
+The library will also support retrieving configurations every few minutes, ensuring your instrumentation adapts to dynamic environments.
 
 ## Contribute
 
