@@ -26,8 +26,8 @@ class BufferManager:
                 cls._instance = super(BufferManager, cls).__new__(cls)
                 cls._instance.__initialized = False
                 cls._instance.check_seconds = check_seconds
-                cls._instance.buffers = []  # List to store all active buffers
-                cls._instance.thread = threading.Thread(target=cls._instance.send_data_from_buffers, daemon=True)
+                cls._instance.buffers = []
+                cls._instance.thread = threading.Thread(target=cls._instance.send_data_from_buffers, daemon=False)
                 cls._instance.thread.start()
                 logger.info('BufferManager: Initialized and sending thread started.')
         return cls._instance
@@ -44,16 +44,14 @@ class BufferManager:
                 with buffer["lock"]:
                     if buffer["data"]:
                         data_to_send = list(buffer["data"])
-                        dataset_value = buffer["dataset"]
                         buffer["data"].clear()
                         for item in data_to_send:
-                            self.send_data(item, dataset=dataset_value)
+                            self.send_data(item, dataset=item["dataset"])
 
-    def register_buffer(self, buffer, lock, dataset):
+    def register_buffer(self, buffer, lock):
         self.buffers.append({
             "data": buffer,
-            "lock": lock,
-            "dataset": dataset
+            "lock": lock
         })
 
 
@@ -64,15 +62,15 @@ class Instrumentation:
         self.active_buffer = self.buffer_A
         self.lock = threading.Lock()
         self.buffer_manager = BufferManager(check_seconds=check_seconds)
-        self.buffer_manager.register_buffer(self.buffer_A, self.lock, "buffer_A")
-        self.buffer_manager.register_buffer(self.buffer_B, self.lock, "buffer_B")
+        self.buffer_manager.register_buffer(self.buffer_A, self.lock)
+        self.buffer_manager.register_buffer(self.buffer_B, self.lock)
         logger.info('Instrumentation: Initialized.')
 
     def handle_data(self, result, dataset, args, kwargs):
         data = {
             "input": (args, kwargs),
             "output": result,
-            "dataset": dataset  # Ensure dataset is captured
+            "dataset": dataset,
         }
         with self.lock:
             # Switch buffers if necessary
