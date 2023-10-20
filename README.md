@@ -69,12 +69,12 @@ graph TD
     D --> E
     E --> F
 
-    style A fill:#f9d,stroke:#333,stroke-width:2px
-    style B fill:#fc9,stroke:#333,stroke-width:2px
-    style C fill:#9cf,stroke:#333,stroke-width:2px
-    style D fill:#cfc,stroke:#333,stroke-width:2px
-    style E fill:#ccf,stroke:#333,stroke-width:2px
-    style F fill:#fcc,stroke:#333,stroke-width:2px
+    style A fill:#2d2d2d,stroke:#666,stroke-width:2px,color:#fff
+    style B fill:#4a4a4a,stroke:#666,stroke-width:2px,color:#fff
+    style C fill:#616161,stroke:#666,stroke-width:2px,color:#fff
+    style D fill:#7a7a7a,stroke:#666,stroke-width:2px,color:#fff
+    style E fill:#8e8e8e,stroke:#666,stroke-width:2px,color:#fff
+    style F fill:#a3a3a3,stroke:#666,stroke-width:2px,color:#fff
 ```
 
 
