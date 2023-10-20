@@ -81,7 +81,7 @@ You can provide additional metadata, including `user_id`, which can be used for 
 
 ```python
 @instrumentation()
-def multiply(x, y, metadata={"user_id": "12345"}):
+def multiply(x, y, logos_shift_metadata={"user_id": "12345"}):
     return x * y
 ```
 

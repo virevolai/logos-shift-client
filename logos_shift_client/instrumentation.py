@@ -93,7 +93,7 @@ class Instrumentation:
 
     def wrap_function(self, func, dataset, *args, **kwargs):
         logger.debug(f"Instrumentation: Wrapping function {func.__name__}. Args: {args}, Kwargs: {kwargs}")
-        metadata = kwargs.pop('metadata', {})
+        metadata = kwargs.pop('logos_shift_metadata', {})
         if self.router:
             func_to_call = self.router.get_api_to_call(func, metadata.get('user_id', None))
         else:
@@ -103,7 +103,7 @@ class Instrumentation:
 
     def wrap_coroutine(self, func, dataset, *args, **kwargs):
         logger.debug(f"Instrumentation: Wrapping coroutine {func.__name__}. Args: {args}, Kwargs: {kwargs}")
-        metadata = kwargs.pop('metadata', {})
+        metadata = kwargs.pop('logos_shift_metadata', {})
         async def async_inner(*a, **kw):
             if self.router:
                 func_to_call = await self.router.get_api_to_call(func, metadata.get('user_id', None))
