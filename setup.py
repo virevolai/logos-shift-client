@@ -1,0 +1,26 @@
+from setuptools import setup, find_packages
+
+setup(
+    name='logos-shift-client',
+    version='0.1.0',
+    author='Saurabh Bhatnagar',
+    email='saurabh@virevol.com',
+    packages=find_packages(),
+    install_requires=[
+        'pydantic',
+        'requests',
+        'asyncio',
+        'tenacity',
+    ],
+    extras_require={
+        'dev': [
+            'pytest',
+            'pytest-asyncio',
+            'ruff==0.1.0'
+        ]
+    },
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+    ],
+)
