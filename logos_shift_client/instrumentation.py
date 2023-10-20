@@ -4,6 +4,8 @@ from collections import deque
 from tenacity import retry, wait_fixed
 import logging
 import time
+import uuid
+from .router import APIRouter
 
 logger = logging.getLogger(__name__)
 MAX_ENTRIES = 10
@@ -35,7 +37,7 @@ class BufferManager:
     @retry(wait=wait_fixed(3))
     def send_data(self, data, dataset="default"):
         logger.info(f"BufferManager: Sending data to dataset {dataset}. Data: {data}")
-        # Placeholder for sending data
+        # requests.post(url, data=data, headers={"Bohita Auth": f"Bearer {self.api_key}"})
 
     def send_data_from_buffers(self):
         while True:
@@ -46,7 +48,7 @@ class BufferManager:
                         data_to_send = list(buffer["data"])
                         buffer["data"].clear()
                         for item in data_to_send:
-                            # logger.debug(f'Sending {item}')
+                            logger.debug(f'Sending {item}')
                             self.send_data(item, dataset=item["dataset"])
 
     def register_buffer(self, buffer, lock):
@@ -57,7 +59,7 @@ class BufferManager:
 
 
 class Instrumentation:
-    def __init__(self, api_key, max_entries=MAX_ENTRIES, check_seconds=CHECK_SECONDS):
+    def __init__(self, api_key, router=None, max_entries=MAX_ENTRIES, check_seconds=CHECK_SECONDS):
         self.api_key, self.max_entries = api_key, max_entries
         self.buffer_A, self.buffer_B = deque(), deque()
         self.active_buffer = self.buffer_A
@@ -65,13 +67,17 @@ class Instrumentation:
         self.buffer_manager = BufferManager(check_seconds=check_seconds)
         self.buffer_manager.register_buffer(self.buffer_A, self.lock)
         self.buffer_manager.register_buffer(self.buffer_B, self.lock)
+        self.router = router if router else APIRouter()
         logger.info('Instrumentation: Initialized.')
 
-    def handle_data(self, result, dataset, args, kwargs):
+    def handle_data(self, result, dataset, args, kwargs, metadata):
+        # TODO: Move to result
+        # metadata['bohita_logos_shift_id'] = str(uuid.uuid4())
         data = {
             "input": (args, kwargs),
             "output": result,
             "dataset": dataset,
+            "metadata": metadata,
         }
         with self.lock:
             # Switch buffers if necessary
@@ -82,19 +88,29 @@ class Instrumentation:
                 else:
                     self.active_buffer = self.buffer_A
             self.active_buffer.append(data)
-            # logger.debug('Added data to active buffer')
+            logger.debug('Added data to active buffer')
         return result
 
     def wrap_function(self, func, dataset, *args, **kwargs):
         logger.debug(f"Instrumentation: Wrapping function {func.__name__}. Args: {args}, Kwargs: {kwargs}")
-        result = func(*args, **kwargs)
-        return self.handle_data(result, dataset, args, kwargs)
+        metadata = kwargs.pop('metadata', {})
+        if self.router:
+            func_to_call = self.router.get_api_to_call(func, metadata.get('user_id', None))
+        else:
+            func_to_call = func
+        result = func_to_call(*args, **kwargs)
+        return self.handle_data(result, dataset, args, kwargs, metadata)
 
     def wrap_coroutine(self, func, dataset, *args, **kwargs):
         logger.debug(f"Instrumentation: Wrapping coroutine {func.__name__}. Args: {args}, Kwargs: {kwargs}")
+        metadata = kwargs.pop('metadata', {})
         async def async_inner(*a, **kw):
-            result = await func(*a, **kw)
-            return self.handle_data(result, dataset, a, kw)
+            if self.router:
+                func_to_call = await self.router.get_api_to_call(func, metadata.get('user_id', None))
+            else:
+                func_to_call = func
+            result = await func_to_call(*a, **kw)
+            return self.handle_data(result, dataset, a, kw, metadata)
         return async_inner(*args, **kwargs)
 
     def __call__(self, dataset="default"):
@@ -109,3 +125,10 @@ class Instrumentation:
             return inner
         return outer
 
+    def provide_feedback(self, bohita_logos_shift_id, feedback):
+        feedback_data = {
+            "bohita_logos_shift_id": bohita_logos_shift_id,
+            "feedback": feedback,
+        }
+        with self.lock:
+            self.active_buffer.append(feedback_data)

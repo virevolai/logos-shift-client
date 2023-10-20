@@ -59,6 +59,7 @@ def test_basic_function_call(setup_instrumentation):
         'input': ((1, 2), {}),
         'output': 3,
         'dataset': 'default',
+        'metadata': {},
     }
     assert any(item[0] == expected_data for item in mock_data_buffer), "Expected data not found in mock_data_buffer"
 
