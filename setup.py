@@ -4,7 +4,7 @@ setup(
     name='logos-shift-client',
     version='0.1.0',
     author='Saurabh Bhatnagar',
-    email='saurabh@virevol.com',
+    author_email='saurabh@virevol.com',
     packages=find_packages(),
     install_requires=[
         'pydantic',
@@ -15,7 +15,6 @@ setup(
     extras_require={
         'dev': [
             'pytest',
-            'pytest-asyncio',
             'ruff==0.1.0'
         ]
     },
