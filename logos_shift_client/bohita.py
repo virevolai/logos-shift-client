@@ -1,6 +1,6 @@
 import requests
 # from pydantic import BaseModel, UUID4
-from typing import Dict, Tuple, Optional
+# from typing import Dict, Tuple, Optional
 
 
 BASE_URL='https://logos-shift-sink-yor7pq3ajq-uc.a.run.app'
@@ -37,7 +37,7 @@ class BohitaClient:
         )
         return response
 
-    def predict(self, **kwargs: Any) -> Any:
+    def predict(self, **kwargs):
         response = requests.post(
             f"{BASE_URL}/predict",
             headers=self.headers,
@@ -46,6 +46,7 @@ class BohitaClient:
         return response.json()
 
 def usage():
-    client = BohitaClient(api_key="YOUR_API_KEY_HERE")
+    pass
+    # client = BohitaClient(api_key="YOUR_API_KEY_HERE")
     # response = client.post_instrumentation_data(InstrumentationData(dataset="sample_dataset", metadata={...}))
     # config_response = client.get_config()

@@ -4,7 +4,7 @@ from collections import deque
 from tenacity import retry, wait_fixed
 import logging
 import time
-import uuid
+# import uuid
 from .router import APIRouter
 
 logger = logging.getLogger(__name__)
