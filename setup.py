@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='logos-shift-client',
-    version='0.1.0',
+    version='0.2.0',
     author='Saurabh Bhatnagar',
     author_email='saurabh@virevol.com',
     packages=find_packages(),
@@ -15,7 +15,7 @@ setup(
     extras_require={
         'dev': [
             'pytest',
-            'ruff==0.1.0'
+            'ruff==0.2.0'
         ]
     },
     classifiers=[
