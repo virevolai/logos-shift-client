@@ -129,6 +129,7 @@ class Instrumentation:
         feedback_data = {
             "bohita_logos_shift_id": bohita_logos_shift_id,
             "feedback": feedback,
+            "dataset": "unknown",
         }
         with self.lock:
             self.active_buffer.append(feedback_data)
