@@ -15,7 +15,8 @@ setup(
     extras_require={
         'dev': [
             'pytest',
-            'ruff==0.2.0'
+            'ruff==0.2.0',
+            'bump2version==1.0.1'
         ]
     },
     classifiers=[
