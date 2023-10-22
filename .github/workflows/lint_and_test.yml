@@ -8,7 +8,7 @@ on:
       - '**.md'
 
 jobs:
-  lint_and_test:
+  test_and_build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -30,9 +30,5 @@ jobs:
       - name: Test
         run: make test
 
-  build:
-    needs: lint_and_test
-    runs-on: ubuntu-latest
-    steps:
       - name: Build
         run: make build
