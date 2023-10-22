@@ -1,26 +1,23 @@
-.PHONY: install install-dev test lint clean build upload
+.PHONY: install install-dev test lint lintgit clean build upload
 
-# Install runtime dependencies
 install:
 	pip install .
 
-# Install both runtime and development dependencies
 install-dev:
 	pip install .[dev]
 
-# Run tests
 test:
 	pytest
 
-# Lint the codebase with Ruff
 lint:
 	ruff check logos_shift_client
 
-# Clean up build artifacts
+lintgit:
+	ruff check --output-format=github logos_shift_client
+
 clean:
 	rm -rf dist build *.egg-info
 
-# Build the package
 build: clean
 	python setup.py sdist bdist_wheel
 
@@ -28,6 +25,5 @@ build: clean
 upload:
 	twine upload dist/*
 
-# Run all the above commands (except upload) in order
-all: install-dev lint test build
+all: install-dev lint lintgit test build
 
