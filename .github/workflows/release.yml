@@ -8,7 +8,7 @@ on:
       - '**.md'
 
 jobs:
-  test_and_build:
+  release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -25,6 +25,11 @@ jobs:
           pip install .[dev]
           pip install setuptools wheel twine
           pip install bump2version
+
+      - name: Configure Git user
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
 
       - name: Bump version
         run: bump2version minor
