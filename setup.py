@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="logos-shift-client",
-    version="0.5.0",
+    version="0.6.0",
     author="Saurabh Bhatnagar",
     author_email="saurabh@virevol.com",
     packages=find_packages(),
