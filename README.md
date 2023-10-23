@@ -1,24 +1,25 @@
 ![Tests](https://github.com/virevolai/logos-shift-client/actions/workflows/test_and_build.yml/badge.svg)
 
-
 ---
 
 # Logos Shift
 
-Logos Shift is an open-source library designed to instrument your calls without adding latency. Integrate it with your existing systems, and gain insights into the function's input, output, and associated metadata.
+Integrating Large Language Models (LLMs) into production systems can be a convoluted process, with myriad challenges to overcome. While several tools offer call instrumentation, **Logos Shift** sets itself apart with its game-changing feature: **automated rollout of your fine-tuned model**. Just integrate with a single line of code and let us notify you when your fine-tuned model is ready for deployment.
 
-This is designed to switch your expensive model with a fine tuned model
 
-## Features
+## Key Feature
 
-- **No Proxying**: Direct calls without the overhead of proxying, ensuring no additional latency.
-- **Keep Your OpenAI Key**: We don't need access to your OpenAI key. Ensure it stays confidential and with you.
-- **A/B rollout***: When your finetuned model is ready, it can be rolled out automatically as an A/B test! No additional steps needed.
-- **Finetune with Feedback**: Provide feedback on whether a result was successful or not based on its unique ID. This is used to have better finetunes for your model.
-- **Truly Open Source**: Extend and modify as per your requirements.
-- **Dynamic Configuration**: Gets server configuration automatically.
-- **Coming soon**:
-    - Fallback on error
+- **Effortless A/B Rollout**: Once your fine-tuned model achieves readiness, it's rolled out as an A/B test. No manual intervention, no complex configurations. Just simplicity.
+
+## Other Features
+
+- **No Proxying**: Direct calls, eliminating the latency of proxying.
+- **Retain Your OpenAI Key**: Your OpenAI key remains yours, safeguarding confidentiality. No leaked keys.
+- **Feedback-Driven Finetuning**: Refine model performance with feedback based on unique result IDs.
+- **Open Source**: Flexibility to modify and adapt as needed.
+- **Dynamic Configuration**: Synchronize with server configurations on-the-fly.
+- **Upcoming**:
+    - Error fallback mechanisms
 
 ## Why
 
@@ -27,7 +28,6 @@ This is designed to switch your expensive model with a fine tuned model
 At [Bohita](https://bohita.com), our pioneering efforts in deploying Large Language Models (LLMs) in production environments have brought forth unique challenges, especially concerning cost management, latency reduction, and optimization. The solutions available in the market weren't adequate for our needs, prompting us to develop and subsequently open-source some of our bespoke tools.
 
 On the subject of proxying: We prioritize the reliability and uptime of our services. By introducing an additional domain as a dependency, we'd inherently be reducing our uptime. Specifically, the probability of combined uptime would be \(1 - (P_A\_up\_B\_down + P_B\_up\_A\_down + P_both\_down)\), which is inherently less than the uptime of either individual service. Given the inherent unpredictability of APIs in today's landscape, compromising our reliability in this manner is not a trade-off we're willing to make.
-
 
 ## Getting Started
 
