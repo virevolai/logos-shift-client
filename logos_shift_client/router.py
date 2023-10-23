@@ -23,7 +23,7 @@ class APIRouter:
             self.frequency = config.get("frequency", self.frequency)
         except Exception:
             logger.warning(
-                "Could not get configuration. If the problem persists, this instance might be stale"
+                "Could not get configuration from server. If the problem persists, this instance might be stale"
             )
 
     def _get_user_hash(self, user_id):

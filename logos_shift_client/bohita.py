@@ -32,17 +32,10 @@ class BohitaClient:
 
     def get_config(self) -> requests.Response:
         response = requests.get(f"{BASE_URL}/config", headers=self.headers)
-        return response
+        return response.json()
 
     def predict(self, **kwargs):
         response = requests.post(
             f"{BASE_URL}/predict", headers=self.headers, json=kwargs
         )
         return response.json()
-
-
-def usage():
-    pass
-    # client = BohitaClient(api_key="YOUR_API_KEY_HERE")
-    # response = client.post_instrumentation_data(InstrumentationData(dataset="sample_dataset", metadata={...}))
-    # config_response = client.get_config()
