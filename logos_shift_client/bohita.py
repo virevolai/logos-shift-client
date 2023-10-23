@@ -1,6 +1,6 @@
 import requests
 
-BASE_URL = "https://logos-shift-sink-yor7pq3ajq-uc.a.run.app"
+BASE_URL = "https://logos-shift-sink-6kso2cgttq-uc.a.run.app"
 
 
 # from pydantic import BaseModel, UUID4
