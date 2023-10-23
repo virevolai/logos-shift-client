@@ -1,3 +1,6 @@
+![Tests](https://github.com/virevolai/logos-shift-client/actions/workflows/test_and_build.yml/badge.svg)
+
+
 ---
 
 # Logos Shift
