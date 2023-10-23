@@ -10,6 +10,7 @@ This is designed to switch your expensive model with a fine tuned model
 
 - **No Proxying**: Direct calls without the overhead of proxying, ensuring no additional latency.
 - **Keep Your OpenAI Key**: We don't need access to your OpenAI key. Ensure it stays confidential and with you.
+- **A/B rollout***: When your finetuned model is ready, it can be rolled out automatically as an A/B test! No additional steps needed.
 - **Finetune with Feedback**: Provide feedback on whether a result was successful or not based on its unique ID. This is used to have better finetunes for your model.
 - **Truly Open Source**: Extend and modify as per your requirements.
 - **Dynamic Configuration**: Gets server configuration automatically.
@@ -52,8 +53,8 @@ def add(x, y):
 
 result = add(1, 2)
 
-# Later, optionally, provide feedback
-logos_shift.provide_feedback(result['bohita_logos_shift_id', "success")
+# Optionally, provide feedback
+logos_shift.provide_feedback(result['bohita_logos_shift_id_123', "success")
 ```
 
 ## How It Works
@@ -91,14 +92,18 @@ graph LR
 
 ## Dataset
 
-All function calls are grouped into datasets. Think of this as the use case those calls are made for.
-If you are intrumentating just one call, then you don't need to do anything (dataset='default').
+All function calls are grouped into datasets. Think of this as the usecase those calls are made for.
+If you are intrumentating just one call, then you don't need to do anything. The default dataset is 'default'.
 
-But if you have different use cases in your application (E.g, chatbot for sales, vs chatbot for help), you should separate them out.
+If you have different usecases in your application (E.g, chatbot for sales, vs chatbot for help), you should separate them out.
 
 ```python
-@logos_shift(dataset="accounting")
-def add(x, y):
+@logos_shift(dataset="sales")
+def add_sales(x, y):
+    return x + y
+
+@logos_shift(dataset="help")
+def add_help(x, y):
     return x + y
 ```
 
