@@ -2,11 +2,12 @@ import asyncio
 import logging
 import threading
 import time
+import uuid
 from collections import deque
 
 from tenacity import retry, wait_fixed
 
-# import uuid
+from .bohita import BohitaClient
 from .router import APIRouter
 
 logger = logging.getLogger(__name__)
@@ -19,17 +20,19 @@ class BufferManager:
     _instance = None
     lock = threading.Lock()
 
-    def __init__(self, check_seconds=CHECK_SECONDS):
+    def __init__(self, bohita_client, check_seconds=CHECK_SECONDS):
         if getattr(self, "__initialized", False):
             return
+        self.bohita_client = bohita_client
         self.check_seconds = check_seconds
         self.__initialized = True
 
-    def __new__(cls, check_seconds=CHECK_SECONDS, *args, **kwargs):
+    def __new__(cls, bohita_client, check_seconds=CHECK_SECONDS, *args, **kwargs):
         with cls.lock:
             if not cls._instance:
                 cls._instance = super(BufferManager, cls).__new__(cls)
                 cls._instance.__initialized = False
+                cls._instance.bohita_client = bohita_client
                 cls._instance.check_seconds = check_seconds
                 cls._instance.buffers = []
                 cls._instance.thread = threading.Thread(
@@ -42,7 +45,7 @@ class BufferManager:
     @retry(wait=wait_fixed(3))
     def send_data(self, data, dataset="default"):
         logger.info(f"BufferManager: Sending data to dataset {dataset}. Data: {data}")
-        # requests.post(url, data=data, headers={"Bohita Auth": f"Bearer {self.api_key}"})
+        self.bohita_client.post_instrumentation_data(data, dataset)
 
     def send_data_from_buffers(self):
         while True:
@@ -62,21 +65,32 @@ class BufferManager:
 
 class LogosShift:
     def __init__(
-        self, api_key, router=None, max_entries=MAX_ENTRIES, check_seconds=CHECK_SECONDS
+        self,
+        api_key,
+        bohita_client=None,
+        router=None,
+        max_entries=MAX_ENTRIES,
+        check_seconds=CHECK_SECONDS,
     ):
-        self.api_key, self.max_entries = api_key, max_entries
+        # self.api_key, self.max_entries = api_key, max_entries
+        self.max_entries = max_entries
+        self.bohita_client = (
+            bohita_client if bohita_client else BohitaClient(api_key=api_key)
+        )
         self.buffer_A, self.buffer_B = deque(), deque()
         self.active_buffer = self.buffer_A
         self.lock = threading.Lock()
-        self.buffer_manager = BufferManager(check_seconds=check_seconds)
+        self.buffer_manager = BufferManager(
+            bohita_client=self.bohita_client, check_seconds=check_seconds
+        )
         self.buffer_manager.register_buffer(self.buffer_A, self.lock)
         self.buffer_manager.register_buffer(self.buffer_B, self.lock)
-        self.router = router if router else APIRouter()
+        self.router = router if router else APIRouter(bohita_client=self.bohita_client)
         logger.info("LogosShift: Initialized.")
 
     def handle_data(self, result, dataset, args, kwargs, metadata):
-        # TODO: Move to result
-        # metadata['bohita_logos_shift_id'] = str(uuid.uuid4())
+        if isinstance(result, dict):
+            result["bohita_logos_shift_id"] = str(uuid.uuid4())
         data = {
             "input": (args, kwargs),
             "output": result,
