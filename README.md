@@ -34,20 +34,20 @@ pip install logos_shift_client
 ### Basic Usage
 
 ```python
-from logos_shift_client import Instrumentation
+from logos_shift_client import LogosShift
 
 # Initialize with your API key
-instrumentation = Instrumentation(api_key="YOUR_API_KEY")
+logos_shift = LogosShift(api_key="YOUR_API_KEY")
 
 # Instrument your function
-@instrumentation()
+@logos_shift()
 def add(x, y):
     return x + y
 
 result = add(1, 2)
 
 # Later, optionally, provide feedback
-instrumentation.provide_feedback(result['bohita_logos_shift_id', "success")
+logos_shift.provide_feedback(result['bohita_logos_shift_id', "success")
 ```
 
 ## How It Works
@@ -89,7 +89,7 @@ graph LR
 You can provide additional metadata, including `user_id`, which can be used for routing decisions based on user-specific details.
 
 ```python
-@instrumentation()
+@logos_shift()
 def multiply(x, y, logos_shift_metadata={"user_id": "12345"}):
     return x * y
 ```
@@ -102,7 +102,7 @@ If you don't have feedback, it will be auto-regressive as usual.
 
 ## Configuration Retrieval
 
-The library will also support retrieving configurations every few minutes, ensuring your instrumentation adapts to dynamic environments.
+The library will also support retrieving configurations every few minutes, ensuring your logos_shift adapts to dynamic environments.
 
 ## Contribute
 

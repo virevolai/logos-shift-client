@@ -1,15 +1,18 @@
 import asyncio
-import threading
-from collections import deque
-from tenacity import retry, wait_fixed
 import logging
+import threading
 import time
+from collections import deque
+
+from tenacity import retry, wait_fixed
+
 # import uuid
 from .router import APIRouter
 
 logger = logging.getLogger(__name__)
 MAX_ENTRIES = 10
-CHECK_SECONDS = 5 
+CHECK_SECONDS = 5
+
 
 class BufferManager:
     # Implementing Singleton pattern
@@ -17,7 +20,7 @@ class BufferManager:
     lock = threading.Lock()
 
     def __init__(self, check_seconds=CHECK_SECONDS):
-        if getattr(self, '__initialized', False):
+        if getattr(self, "__initialized", False):
             return
         self.check_seconds = check_seconds
         self.__initialized = True
@@ -29,9 +32,11 @@ class BufferManager:
                 cls._instance.__initialized = False
                 cls._instance.check_seconds = check_seconds
                 cls._instance.buffers = []
-                cls._instance.thread = threading.Thread(target=cls._instance.send_data_from_buffers, daemon=True)
+                cls._instance.thread = threading.Thread(
+                    target=cls._instance.send_data_from_buffers, daemon=True
+                )
                 cls._instance.thread.start()
-                logger.info('BufferManager: Initialized and sending thread started.')
+                logger.info("BufferManager: Initialized and sending thread started.")
         return cls._instance
 
     @retry(wait=wait_fixed(3))
@@ -48,18 +53,17 @@ class BufferManager:
                         data_to_send = list(buffer["data"])
                         buffer["data"].clear()
                         for item in data_to_send:
-                            logger.debug(f'Sending {item}')
+                            logger.debug(f"Sending {item}")
                             self.send_data(item, dataset=item["dataset"])
 
     def register_buffer(self, buffer, lock):
-        self.buffers.append({
-            "data": buffer,
-            "lock": lock
-        })
+        self.buffers.append({"data": buffer, "lock": lock})
 
 
-class Instrumentation:
-    def __init__(self, api_key, router=None, max_entries=MAX_ENTRIES, check_seconds=CHECK_SECONDS):
+class LogosShift:
+    def __init__(
+        self, api_key, router=None, max_entries=MAX_ENTRIES, check_seconds=CHECK_SECONDS
+    ):
         self.api_key, self.max_entries = api_key, max_entries
         self.buffer_A, self.buffer_B = deque(), deque()
         self.active_buffer = self.buffer_A
@@ -68,7 +72,7 @@ class Instrumentation:
         self.buffer_manager.register_buffer(self.buffer_A, self.lock)
         self.buffer_manager.register_buffer(self.buffer_B, self.lock)
         self.router = router if router else APIRouter()
-        logger.info('Instrumentation: Initialized.')
+        logger.info("LogosShift: Initialized.")
 
     def handle_data(self, result, dataset, args, kwargs, metadata):
         # TODO: Move to result
@@ -82,49 +86,61 @@ class Instrumentation:
         with self.lock:
             # Switch buffers if necessary
             if len(self.active_buffer) >= self.max_entries:
-                logger.debug('Switching buffer')
+                logger.debug("Switching buffer")
                 if self.active_buffer is self.buffer_A:
                     self.active_buffer = self.buffer_B
                 else:
                     self.active_buffer = self.buffer_A
             self.active_buffer.append(data)
-            logger.debug('Added data to active buffer')
+            logger.debug("Added data to active buffer")
         return result
 
     def wrap_function(self, func, dataset, *args, **kwargs):
-        logger.debug(f"Instrumentation: Wrapping function {func.__name__}. Args: {args}, Kwargs: {kwargs}")
-        metadata = kwargs.pop('logos_shift_metadata', {})
-        metadata['function'] = func.__name__
+        logger.debug(
+            f"LogosShift: Wrapping function {func.__name__}. Args: {args}, Kwargs: {kwargs}"
+        )
+        metadata = kwargs.pop("logos_shift_metadata", {})
+        metadata["function"] = func.__name__
         if self.router:
-            func_to_call = self.router.get_api_to_call(func, metadata.get('user_id', None))
+            func_to_call = self.router.get_api_to_call(
+                func, metadata.get("user_id", None)
+            )
         else:
             func_to_call = func
         result = func_to_call(*args, **kwargs)
         return self.handle_data(result, dataset, args, kwargs, metadata)
 
     def wrap_coroutine(self, func, dataset, *args, **kwargs):
-        logger.debug(f"Instrumentation: Wrapping coroutine {func.__name__}. Args: {args}, Kwargs: {kwargs}")
-        metadata = kwargs.pop('logos_shift_metadata', {})
-        metadata['function'] = func.__name__
+        logger.debug(
+            f"LogosShift: Wrapping coroutine {func.__name__}. Args: {args}, Kwargs: {kwargs}"
+        )
+        metadata = kwargs.pop("logos_shift_metadata", {})
+        metadata["function"] = func.__name__
+
         async def async_inner(*a, **kw):
             if self.router:
-                func_to_call = await self.router.get_api_to_call(func, metadata.get('user_id', None))
+                func_to_call = await self.router.get_api_to_call(
+                    func, metadata.get("user_id", None)
+                )
             else:
                 func_to_call = func
             result = await func_to_call(*a, **kw)
             return self.handle_data(result, dataset, a, kw, metadata)
+
         return async_inner(*args, **kwargs)
 
     def __call__(self, dataset="default"):
         def outer(func):
             def inner(*args, **kwargs):
                 if asyncio.iscoroutinefunction(func):
-                    logger.debug("Instrumentation: Detected coroutine.")
+                    logger.debug("LogosShift: Detected coroutine.")
                     return self.wrap_coroutine(func, dataset, *args, **kwargs)
                 else:
-                    logger.debug("Instrumentation: Detected synchronous function.")
+                    logger.debug("LogosShift: Detected synchronous function.")
                     return self.wrap_function(func, dataset, *args, **kwargs)
+
             return inner
+
         return outer
 
     def provide_feedback(self, bohita_logos_shift_id, feedback):

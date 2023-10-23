@@ -1,14 +1,14 @@
 import hashlib
-import random
 import logging
-
+import random
 
 logger = logging.getLogger(__name__)
 
+
 class APIRouter:
     def __init__(self, threshold=0.1, mode="never"):
-        self.threshold = threshold # precentage of requests to new API
-        self.mode = mode # "never", "random" or "user_based"
+        self.threshold = threshold  # precentage of requests to new API
+        self.mode = mode  # "never", "random" or "user_based"
         logger.info(f"Initialized {mode} router")
 
     def _get_user_hash(self, user_id):

@@ -1,2 +1,2 @@
-from .instrumentation import Instrumentation  #noqa
-from .router import APIRouter  #noqa
+from .logos_shift import LogosShift  # noqa
+from .router import APIRouter  # noqa
