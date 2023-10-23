@@ -10,14 +10,20 @@ This is designed to switch your expensive model with a fine tuned model
 
 - **No Proxying**: Direct calls without the overhead of proxying, ensuring no additional latency.
 - **Keep Your OpenAI Key**: We don't need access to your OpenAI key. Ensure it stays confidential and with you.
-- **Feedback Support**: Provide feedback on whether a result was successful or not based on its unique ID. This is used to have better finetunes for your model.
+- **Finetune with Feedback**: Provide feedback on whether a result was successful or not based on its unique ID. This is used to have better finetunes for your model.
 - **Truly Open Source**: Extend and modify as per your requirements.
-- **Upcoming Features**:
-  - Dynamic configuration from the server.
+- **Dynamic Configuration**: Gets server configuration automatically.
+- **Coming soon**:
+    - Fallback on error
 
 ## Why
 
 ![sergey](assets/images/sergey.png)
+
+At [Bohita](https://bohita.com), our pioneering efforts in deploying Large Language Models (LLMs) in production environments have brought forth unique challenges, especially concerning cost management, latency reduction, and optimization. The solutions available in the market weren't adequate for our needs, prompting us to develop and subsequently open-source some of our bespoke tools.
+
+On the subject of proxying: We prioritize the reliability and uptime of our services. By introducing an additional domain as a dependency, we'd inherently be reducing our uptime. Specifically, the probability of combined uptime would be \(1 - (P_A\_up\_B\_down + P_B\_up\_A\_down + P_both\_down)\), which is inherently less than the uptime of either individual service. Given the inherent unpredictability of APIs in today's landscape, compromising our reliability in this manner is not a trade-off we're willing to make.
+
 
 ## Getting Started
 
@@ -83,6 +89,20 @@ graph LR
     class C buffer
 ```
 
+## Dataset
+
+All function calls are grouped into datasets. Think of this as the use case those calls are made for.
+If you are intrumentating just one call, then you don't need to do anything (dataset='default').
+
+But if you have different use cases in your application (E.g, chatbot for sales, vs chatbot for help), you should separate them out.
+
+```python
+@logos_shift(dataset="accounting")
+def add(x, y):
+    return x + y
+```
+
+This helps you track them separately and also finetune them separately for each use case.
 
 ## Metadata
 

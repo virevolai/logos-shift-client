@@ -36,9 +36,7 @@ def wait_for_data(buffer, timeout=20):
 
 @pytest.fixture
 def setup_logos_shift():
-    logos_shift = LogosShift(
-        api_key="YOUR_API_KEY", max_entries=1, check_seconds=0.5
-    )
+    logos_shift = LogosShift(api_key="YOUR_API_KEY", max_entries=1, check_seconds=0.5)
 
     # Override the actual send_data method with our mock for testing
     logos_shift.buffer_manager.send_data = mock_send_data
