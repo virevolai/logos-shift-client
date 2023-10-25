@@ -10,6 +10,8 @@ Integrating Large Language Models (LLMs) into production systems can be a convol
 
 You can also do this yourself for free. LogosShift is the simplest and best way to do this for hackers.
 
+Pssst: Can do this for any API, not just LLMs
+
 
 ## Key Feature
 
@@ -22,6 +24,8 @@ You can also do this yourself for free. LogosShift is the simplest and best way 
 - **Feedback-Driven Finetuning**: Refine model performance with feedback based on unique result IDs.
 - **Open Source**: Flexibility to modify and adapt as needed.
 - **Dynamic Configuration**: Synchronize with server configurations on-the-fly.
+- Simplicity: Simple is beautiful. Minimal dependancies.
+- No lock-in: Can optionally save data to local drive if you want to train model yourself.
 - **Upcoming**:
     - Error fallback mechanisms
 
@@ -37,7 +41,7 @@ On the subject of proxying: We prioritize the reliability and uptime of our serv
 
 ### Prerequisites
 
-- Obtain an API key from [Bohita Logos Shift Portal](https://bohita.com).
+- Obtain an API key from [Bohita Logos Shift Portal](https://api.bohita.com).
 
 ### Installation
 
@@ -50,7 +54,7 @@ pip install logos_shift_client
 ```python
 from logos_shift_client import LogosShift
 
-# Initialize with your API key
+# Initialize with your API key (without if you just want the local copy)
 logos_shift = LogosShift(api_key="YOUR_API_KEY")
 
 # Instrument your function
@@ -135,6 +139,17 @@ If you don't have feedback, it will be auto-regressive as usual.
 ## Configuration Retrieval
 
 The library will also support retrieving configurations every few minutes, ensuring your logos_shift adapts to dynamic environments.
+
+## Local Copy
+
+Initialize with a filename to keep a local copy. You can also run it without Bohita, just set api_key to None
+
+```python
+logos_shift = LogosShift(api_key="YOUR_API_KEY", filename="api_calls.log")
+
+# Can also disable sending data to Bohita. However, you will lose the automatic routing.
+logos_shift = LogosShift(api_key=None, filename="api_calls.log")
+```
 
 ## Contribute
 

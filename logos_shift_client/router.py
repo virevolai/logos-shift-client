@@ -10,7 +10,10 @@ class APIRouter:
         self.bohita_client = bohita_client
         self.threshold = threshold  # precentage of requests to new API
         self.mode = mode  # "never", "random" or "user_based"
-        self.count, self.frequency = 0, 1_000
+        self.call_count, self.conf_frequency = (
+            0,
+            1_000,
+        )  # How frequently to fetch config
         logger.info(f"Initialized {mode} router")
         self._get_configuration
 
@@ -20,7 +23,7 @@ class APIRouter:
             config = self.bohita_client.get_config()
             self.threshold = config.get("threshold", self.threshold)
             self.mode = config.get("mode", self.mode)
-            self.frequency = config.get("frequency", self.frequency)
+            self.conf_frequency = config.get("frequency", self.conf_frequency)
         except Exception:
             logger.warning(
                 "Could not get configuration from server. If the problem persists, this instance might be stale"
@@ -38,16 +41,12 @@ class APIRouter:
         return False
 
     def get_api_to_call(self, old_api_func, user_id=None):
-        if self.count % self.frequency == 0:
+        self.call_count += 1
+        if self.call_count % self.conf_frequency == 0:
             self._get_configuration()
         if self.should_route_to_new_api(user_id):
             return self.call_new_api
         return old_api_func
-
-    # def call_api_async(self, old_api_func, user_id=None):
-    #    if self.should_route_to_new_api(user_id):
-    #        return self.call_new_api_async
-    #    return old_api_func
 
     async def call_new_api_async(self, **kwargs):
         self.bohita_client.predict(**kwargs)

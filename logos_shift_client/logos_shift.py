@@ -3,6 +3,7 @@ import logging
 import threading
 import time
 import uuid
+from pathlib import Path
 from collections import deque
 
 from tenacity import retry, wait_fixed
@@ -20,20 +21,24 @@ class BufferManager:
     _instance = None
     lock = threading.Lock()
 
-    def __init__(self, bohita_client, check_seconds=CHECK_SECONDS):
+    def __init__(self, bohita_client, check_seconds=CHECK_SECONDS, filename=None):
         if getattr(self, "__initialized", False):
             return
         self.bohita_client = bohita_client
         self.check_seconds = check_seconds
+        self.filepath = self.check_filename(filename)
         self.__initialized = True
 
-    def __new__(cls, bohita_client, check_seconds=CHECK_SECONDS, *args, **kwargs):
+    def __new__(
+        cls, bohita_client, check_seconds=CHECK_SECONDS, filename=None, *args, **kwargs
+    ):
         with cls.lock:
             if not cls._instance:
                 cls._instance = super(BufferManager, cls).__new__(cls)
                 cls._instance.__initialized = False
                 cls._instance.bohita_client = bohita_client
                 cls._instance.check_seconds = check_seconds
+                cls._instance.filepath = cls._instance.check_filename(filename)
                 cls._instance.buffers = []
                 cls._instance.thread = threading.Thread(
                     target=cls._instance.send_data_from_buffers, daemon=True
@@ -42,10 +47,24 @@ class BufferManager:
                 logger.info("BufferManager: Initialized and sending thread started.")
         return cls._instance
 
+    def check_filename(self, filename: str):
+        if filename:
+            logdir = Path(filename).parent
+            if not logdir.exists():
+                raise Exception(f"Directory {logdir} does not exist!")
+        return Path(filename) if filename else None
+
+    def _write_to_local(self, data):
+        if self.filepath:
+            with self.filepath.open("a") as file_handle:
+                for item in data:
+                    file_handle.write(str(item) + "\n")
+
     @retry(wait=wait_fixed(3))
     def send_data(self, data, dataset="default"):
         logger.info(f"BufferManager: Sending data to dataset {dataset}. Data: {data}")
         self.bohita_client.post_instrumentation_data(data, dataset)
+        self._write_to_local(data)
 
     def send_data_from_buffers(self):
         while True:
@@ -71,6 +90,7 @@ class LogosShift:
         router=None,
         max_entries=MAX_ENTRIES,
         check_seconds=CHECK_SECONDS,
+        filename=None,
     ):
         # self.api_key, self.max_entries = api_key, max_entries
         self.max_entries = max_entries
@@ -81,7 +101,9 @@ class LogosShift:
         self.active_buffer = self.buffer_A
         self.lock = threading.Lock()
         self.buffer_manager = BufferManager(
-            bohita_client=self.bohita_client, check_seconds=check_seconds
+            bohita_client=self.bohita_client,
+            check_seconds=check_seconds,
+            filename=filename,
         )
         self.buffer_manager.register_buffer(self.buffer_A, self.lock)
         self.buffer_manager.register_buffer(self.buffer_B, self.lock)
