@@ -5,7 +5,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="logos-shift-client",
-    version="0.8.0",
+    version="0.9.0",
     author="Saurabh Bhatnagar",
     author_email="saurabh@virevol.com",
     description="Switch your current LLM with a finetuned one automatically, no additional latency",
