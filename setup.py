@@ -5,7 +5,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="logos-shift-client",
-    version="0.7.0",
+    version="0.8.0",
     author="Saurabh Bhatnagar",
     author_email="saurabh@virevol.com",
     long_description=long_description,
