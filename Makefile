@@ -11,6 +11,7 @@ test:
 
 lint:
 	ruff check logos_shift_client
+	ruff format logos_shift_client
 
 lintgit:
 	ruff check --output-format=github logos_shift_client
