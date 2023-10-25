@@ -6,6 +6,7 @@ BASE_URL = "https://logos-shift-sink-6kso2cgttq-uc.a.run.app"
 TIMEOUT = 10  # seconds
 logger = logging.getLogger(__name__)
 
+
 class BohitaClient:
     def __init__(self, api_key: str):
         if api_key is None:
@@ -28,7 +29,7 @@ class BohitaClient:
                 f"{BASE_URL}/instrumentation/",
                 headers=self.headers,
                 json={**data, "dataset": dataset},
-                timeout=TIMEOUT
+                timeout=TIMEOUT,
             )
             response.raise_for_status()
         except requests.RequestException as e:
@@ -39,8 +40,7 @@ class BohitaClient:
             return
         try:
             response = await self.async_client.post(
-                f"{BASE_URL}/instrumentation/",
-                json={**data, "dataset": dataset}
+                f"{BASE_URL}/instrumentation/", json={**data, "dataset": dataset}
             )
             response.raise_for_status()
         except httpx.RequestError as e:
@@ -50,7 +50,9 @@ class BohitaClient:
         if not self.headers:
             return {}
         try:
-            response = requests.get(f"{BASE_URL}/config", headers=self.headers, timeout=TIMEOUT)
+            response = requests.get(
+                f"{BASE_URL}/config", headers=self.headers, timeout=TIMEOUT
+            )
             response.raise_for_status()
             return response.json()
         except requests.RequestException as e:
@@ -73,7 +75,10 @@ class BohitaClient:
             return
         try:
             response = requests.post(
-                f"{BASE_URL}/predict", headers=self.headers, json=kwargs, timeout=TIMEOUT
+                f"{BASE_URL}/predict",
+                headers=self.headers,
+                json=kwargs,
+                timeout=TIMEOUT,
             )
             response.raise_for_status()
             return response.json()
@@ -84,9 +89,7 @@ class BohitaClient:
         if not self.headers:
             return
         try:
-            response = await self.async_client.post(
-                f"{BASE_URL}/predict", json=kwargs
-            )
+            response = await self.async_client.post(f"{BASE_URL}/predict", json=kwargs)
             response.raise_for_status()
             return response.json()
         except httpx.RequestError as e:

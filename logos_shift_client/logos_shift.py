@@ -214,19 +214,25 @@ class LogosShift:
         return result
 
     def _wrap_common_sync(self, func, dataset, *args, **kwargs):
-        logger.debug(f"LogosShift: Wrapping function {func.__name__}. Args: {args}, Kwargs: {kwargs}")
+        logger.debug(
+            f"LogosShift: Wrapping function {func.__name__}. Args: {args}, Kwargs: {kwargs}"
+        )
         metadata = kwargs.pop("logos_shift_metadata", {})
         metadata["function"] = func.__name__
 
         if self.router:
-            func_to_call = self.router.get_api_to_call(func, metadata.get("user_id", None))
+            func_to_call = self.router.get_api_to_call(
+                func, metadata.get("user_id", None)
+            )
         else:
             func_to_call = func
 
         return func_to_call, args, kwargs, metadata
 
     def wrap_function(self, func, dataset, *args, **kwargs):
-        func_to_call, args, kwargs, metadata = self._wrap_common_sync(func, dataset, *args, **kwargs)
+        func_to_call, args, kwargs, metadata = self._wrap_common_sync(
+            func, dataset, *args, **kwargs
+        )
         result = func_to_call(*args, **kwargs)
         return self.handle_data(result, dataset, args, kwargs, metadata)
 
@@ -242,17 +248,20 @@ class LogosShift:
                 return async_inner
             else:
                 return sync_inner
+
         return wrapper
 
     async def _handle_data_async(self, result, dataset, args, kwargs, metadata):
         return self.handle_data(result, dataset, args, kwargs, metadata)
 
     async def _wrap_function_async(self, func, dataset, *args, **kwargs):
-        func_to_call, args, kwargs, metadata = await self._wrap_common(func, dataset, *args, **kwargs)
+        func_to_call, args, kwargs, metadata = await self._wrap_common(
+            func, dataset, *args, **kwargs
+        )
         result = await func_to_call(*args, **kwargs)
         return await self._handle_data_async(result, dataset, args, kwargs, metadata)
 
-    def __call__(self, dataset="default"):
+    def __call__(self, dataset="default"):  # noqa
         def wrapper(func):
             async def async_inner(*args, **kwargs):
                 return await self._wrap_function_async(func, dataset, *args, **kwargs)
@@ -264,6 +273,7 @@ class LogosShift:
                 return async_inner
             else:
                 return sync_inner
+
         return wrapper
 
     def provide_feedback(self, bohita_logos_shift_id, feedback):
