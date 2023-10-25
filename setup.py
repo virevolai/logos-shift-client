@@ -10,6 +10,7 @@ setup(
         "requests",
         "asyncio",
         "tenacity",
+        "httpx",
     ],
     extras_require={"dev": ["pytest", "ruff>=0.1.2", "bump2version==1.0.1"]},
     classifiers=[

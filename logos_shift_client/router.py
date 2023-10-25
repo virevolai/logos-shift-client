@@ -131,7 +131,7 @@ class APIRouter:
         return old_api_func
 
     async def call_new_api_async(self, **kwargs):
-        await self.bohita_client.predict(**kwargs)
+        await self.bohita_client.predict_async(**kwargs)
 
     def call_new_api(self, **kwargs):
         self.bohita_client.predict(**kwargs)
