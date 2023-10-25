@@ -16,49 +16,49 @@ MAX_ENTRIES = 10
 CHECK_SECONDS = 5
 
 
-class BufferManager:
+class SingletonMeta(type):
+    _instances = {}
+    _lock = threading.Lock()
+
+    def __call__(cls, *args, **kwargs):
+        with cls._lock:
+            if cls not in cls._instances:
+                instance = super().__call__(*args, **kwargs)
+                cls._instances[cls] = instance
+        return cls._instances[cls]
+
+
+class BufferManager(metaclass=SingletonMeta):
     # Implementing Singleton pattern
     _instance = None
     lock = threading.Lock()
 
     def __init__(self, bohita_client, check_seconds=CHECK_SECONDS, filename=None):
-        if getattr(self, "__initialized", False):
-            return
         self.bohita_client = bohita_client
         self.check_seconds = check_seconds
-        self.filepath = self.check_filename(filename)
-        self.__initialized = True
+        self.open_handle(filename)
+        self.buffers = []
+        self.thread = threading.Thread(target=self.send_data_from_buffers, daemon=True)
+        self.thread.start()
+        logger.info("BufferManager: Initialized and sending thread started.")
 
-    def __new__(
-        cls, bohita_client, check_seconds=CHECK_SECONDS, filename=None, *args, **kwargs
-    ):
-        with cls.lock:
-            if not cls._instance:
-                cls._instance = super(BufferManager, cls).__new__(cls)
-                cls._instance.__initialized = False
-                cls._instance.bohita_client = bohita_client
-                cls._instance.check_seconds = check_seconds
-                cls._instance.filepath = cls._instance.check_filename(filename)
-                cls._instance.buffers = []
-                cls._instance.thread = threading.Thread(
-                    target=cls._instance.send_data_from_buffers, daemon=True
-                )
-                cls._instance.thread.start()
-                logger.info("BufferManager: Initialized and sending thread started.")
-        return cls._instance
-
-    def check_filename(self, filename: str):
+    def open_handle(self, filename: str):
         if filename:
             logdir = Path(filename).parent
             if not logdir.exists():
                 raise Exception(f"Directory {logdir} does not exist!")
-        return Path(filename) if filename else None
+            self.file_handle = open(Path(filename), "a", buffering=1)
+        else:
+            self.file_handle = None
+
+    def __del__(self):
+        if self.file_handle:
+            self.file_handle.close()
 
     def _write_to_local(self, data):
-        if self.filepath:
-            with self.filepath.open("a") as file_handle:
-                for item in data:
-                    file_handle.write(str(item) + "\n")
+        if self.file_handle:
+            for item in data:
+                self.file_handle.write(str(item) + "\n")
 
     @retry(wait=wait_fixed(3))
     def send_data(self, data, dataset="default"):
