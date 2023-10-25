@@ -100,9 +100,11 @@ class BufferManager(metaclass=SingletonMeta):
 
 class LogosShift:
     """
-    LogosShift is a tool for capturing, logging, and optionally sending function call data to a remote server.
+    LogosShift is a tool for capturing, logging, and optionally sending function call data to a remote server using rollouts.
 
     It allows developers to easily instrument their functions, capturing input arguments, output results, metadata, and optionally sending this data to the Bohita platform for further analysis. Data can also be stored locally.
+
+    It supports both synchronous and asynchronous functions. For asynchronous functions, it automatically detects and wraps them accordingly.
 
     Attributes:
         bohita_client (BohitaClient): The client used to send data to the Bohita platform.
@@ -121,6 +123,13 @@ class LogosShift:
         ...     return x + y
         ...
         >>> result = add(1, 2)
+
+        Asynchronous function:
+        >>> @logos_shift()
+        ... async def add_async(x, y):
+        ...     return x + y
+        ...
+        >>> result = await add_async(1, 2)
 
         To provide feedback:
         >>> logos_shift.provide_feedback(result['bohita_logos_shift_id'], "success")
@@ -204,60 +213,58 @@ class LogosShift:
             logger.debug("Added data to active buffer")
         return result
 
-    def _wrap_common(self, func, dataset, args, kwargs, is_async):
-        logger.debug(
-            f"LogosShift: Wrapping {'coroutine' if is_async else 'function'} {func.__name__}. Args: {args}, Kwargs: {kwargs}"
-        )
+    def _wrap_common_sync(self, func, dataset, *args, **kwargs):
+        logger.debug(f"LogosShift: Wrapping function {func.__name__}. Args: {args}, Kwargs: {kwargs}")
         metadata = kwargs.pop("logos_shift_metadata", {})
         metadata["function"] = func.__name__
+
         if self.router:
-            func_to_call = self.router.get_api_to_call(
-                func, metadata.get("user_id", None)
-            )
+            func_to_call = self.router.get_api_to_call(func, metadata.get("user_id", None))
         else:
             func_to_call = func
 
         return func_to_call, args, kwargs, metadata
 
     def wrap_function(self, func, dataset, *args, **kwargs):
-        func_to_call, args, kwargs, metadata = self._wrap_common(
-            func, dataset, args, kwargs, False
-        )
+        func_to_call, args, kwargs, metadata = self._wrap_common_sync(func, dataset, *args, **kwargs)
         result = func_to_call(*args, **kwargs)
         return self.handle_data(result, dataset, args, kwargs, metadata)
 
-    async def wrap_coroutine(self, func, dataset, *args, **kwargs):
-        func_to_call, args, kwargs, metadata = await self._wrap_common(
-            func, dataset, args, kwargs, True
-        )
-        result = await func_to_call(*args, **kwargs)
+    def __call__(self, dataset="default"):
+        def wrapper(func):
+            async def async_inner(*args, **kwargs):
+                return await self._wrap_function_async(func, dataset, *args, **kwargs)
+
+            def sync_inner(*args, **kwargs):
+                return self.wrap_function(func, dataset, *args, **kwargs)
+
+            if asyncio.iscoroutinefunction(func):
+                return async_inner
+            else:
+                return sync_inner
+        return wrapper
+
+    async def _handle_data_async(self, result, dataset, args, kwargs, metadata):
         return self.handle_data(result, dataset, args, kwargs, metadata)
 
-        async def async_inner(*a, **kw):
-            if self.router:
-                func_to_call = await self.router.get_api_to_call(
-                    func, metadata.get("user_id", None)
-                )
-            else:
-                func_to_call = func
-            result = await func_to_call(*a, **kw)
-            return self.handle_data(result, dataset, a, kw, metadata)
-
-        return async_inner(*args, **kwargs)
+    async def _wrap_function_async(self, func, dataset, *args, **kwargs):
+        func_to_call, args, kwargs, metadata = await self._wrap_common(func, dataset, *args, **kwargs)
+        result = await func_to_call(*args, **kwargs)
+        return await self._handle_data_async(result, dataset, args, kwargs, metadata)
 
     def __call__(self, dataset="default"):
-        def outer(func):
-            def inner(*args, **kwargs):
-                if asyncio.iscoroutinefunction(func):
-                    logger.debug("LogosShift: Detected coroutine.")
-                    return self.wrap_coroutine(func, dataset, *args, **kwargs)
-                else:
-                    logger.debug("LogosShift: Detected synchronous function.")
-                    return self.wrap_function(func, dataset, *args, **kwargs)
+        def wrapper(func):
+            async def async_inner(*args, **kwargs):
+                return await self._wrap_function_async(func, dataset, *args, **kwargs)
 
-            return inner
+            def sync_inner(*args, **kwargs):
+                return self.wrap_function(func, dataset, *args, **kwargs)
 
-        return outer
+            if asyncio.iscoroutinefunction(func):
+                return async_inner
+            else:
+                return sync_inner
+        return wrapper
 
     def provide_feedback(self, bohita_logos_shift_id, feedback):
         """
