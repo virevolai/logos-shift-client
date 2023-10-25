@@ -5,6 +5,7 @@ import time
 import uuid
 from pathlib import Path
 from collections import deque
+from typing import Optional, Union
 
 from tenacity import retry, wait_fixed
 
@@ -29,11 +30,26 @@ class SingletonMeta(type):
 
 
 class BufferManager(metaclass=SingletonMeta):
-    # Implementing Singleton pattern
+    """
+    A singleton class responsible for managing data buffers and sending data to a remote server.
+
+    Attributes:
+        bohita_client: An instance of BohitaClient used to send data to the remote server.
+        check_seconds: The interval in seconds between checks to send data from the buffers.
+        filepath: The file path for local data storage. If None, data is not stored locally.
+        buffers: A list of data buffers.
+        thread: The thread responsible for sending data from the buffers.
+    """
+
     _instance = None
     lock = threading.Lock()
 
-    def __init__(self, bohita_client, check_seconds=CHECK_SECONDS, filename=None):
+    def __init__(
+        self,
+        bohita_client: BohitaClient,
+        check_seconds: int = CHECK_SECONDS,
+        filename: Optional[Union[str, Path]] = None,
+    ):
         self.bohita_client = bohita_client
         self.check_seconds = check_seconds
         self.open_handle(filename)
@@ -83,6 +99,49 @@ class BufferManager(metaclass=SingletonMeta):
 
 
 class LogosShift:
+    """
+    LogosShift is a tool for capturing, logging, and optionally sending function call data to a remote server.
+
+    It allows developers to easily instrument their functions, capturing input arguments, output results, metadata, and optionally sending this data to the Bohita platform for further analysis. Data can also be stored locally.
+
+    Attributes:
+        bohita_client (BohitaClient): The client used to send data to the Bohita platform.
+        max_entries (int): The maximum number of entries to store in a buffer before switching to the next buffer.
+        buffer_A (collections.deque): The first data buffer.
+        buffer_B (collections.deque): The second data buffer.
+        active_buffer (collections.deque): The currently active data buffer.
+        lock (threading.Lock): A lock to ensure thread-safety when modifying the buffers.
+        buffer_manager (BufferManager): The manager for handling data buffers and sending data.
+        router (APIRouter): The router for determining which API to call based on the function and user.
+
+    Examples:
+        >>> logos_shift = LogosShift(api_key="YOUR_API_KEY")
+        >>> @logos_shift()
+        ... def add(x, y):
+        ...     return x + y
+        ...
+        >>> result = add(1, 2)
+
+        To provide feedback:
+        >>> logos_shift.provide_feedback(result['bohita_logos_shift_id'], "success")
+
+        To specify a dataset:
+        >>> @logos_shift(dataset="sales")
+        ... def add_sales(x, y):
+        ...     return x + y
+
+        Using metadata:
+        >>> @logos_shift()
+        ... def multiply(x, y, logos_shift_metadata={"user_id": "12345"}):
+        ...     return x * y
+
+        To store data locally:
+        >>> logos_shift = LogosShift(api_key="YOUR_API_KEY", filename="api_calls.log")
+
+        To disable sending data to Bohita:
+        >>> logos_shift = LogosShift(api_key=None, filename="api_calls.log")
+    """
+
     def __init__(
         self,
         api_key,
@@ -92,7 +151,21 @@ class LogosShift:
         check_seconds=CHECK_SECONDS,
         filename=None,
     ):
-        # self.api_key, self.max_entries = api_key, max_entries
+        """
+        Initializes a new instance of LogosShift.
+
+        Args:
+            api_key (str): Your API key for the Bohita platform.
+            bohita_client (Optional[BohitaClient]): An optional instance of BohitaClient. If not provided, a new instance will be created.
+            router (Optional[APIRouter]): An optional instance of APIRouter. If not provided, a new instance will be created.
+            max_entries (int): The maximum number of entries to store in a buffer before switching to the next buffer. Default is 10.
+            check_seconds (int): The interval in seconds between checks to send data from the buffers. Default is 5.
+            filename (Optional[Union[str, Path]]): The file path for local data storage. If None, data is not stored locally.
+
+        Examples:
+            >>> logos_shift = LogosShift(api_key="YOUR_API_KEY")
+            >>> logos_shift = LogosShift(api_key="YOUR_API_KEY", filename="api_calls.log")
+        """
         self.max_entries = max_entries
         self.bohita_client = (
             bohita_client if bohita_client else BohitaClient(api_key=api_key)
@@ -187,6 +260,16 @@ class LogosShift:
         return outer
 
     def provide_feedback(self, bohita_logos_shift_id, feedback):
+        """
+        Provides feedback for a specific function call.
+
+        Args:
+            bohita_logos_shift_id (str): The unique identifier for the function call.
+            feedback (str): The feedback string.
+
+        Examples:
+            >>> logos_shift.provide_feedback("unique_id_123", "success")
+        """
         feedback_data = {
             "bohita_logos_shift_id": bohita_logos_shift_id,
             "feedback": feedback,
