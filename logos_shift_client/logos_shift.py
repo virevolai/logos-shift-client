@@ -131,9 +131,9 @@ class LogosShift:
             logger.debug("Added data to active buffer")
         return result
 
-    def wrap_function(self, func, dataset, *args, **kwargs):
+    def _wrap_common(self, func, dataset, args, kwargs, is_async):
         logger.debug(
-            f"LogosShift: Wrapping function {func.__name__}. Args: {args}, Kwargs: {kwargs}"
+            f"LogosShift: Wrapping {'coroutine' if is_async else 'function'} {func.__name__}. Args: {args}, Kwargs: {kwargs}"
         )
         metadata = kwargs.pop("logos_shift_metadata", {})
         metadata["function"] = func.__name__
@@ -143,15 +143,22 @@ class LogosShift:
             )
         else:
             func_to_call = func
+
+        return func_to_call, args, kwargs, metadata
+
+    def wrap_function(self, func, dataset, *args, **kwargs):
+        func_to_call, args, kwargs, metadata = self._wrap_common(
+            func, dataset, args, kwargs, False
+        )
         result = func_to_call(*args, **kwargs)
         return self.handle_data(result, dataset, args, kwargs, metadata)
 
-    def wrap_coroutine(self, func, dataset, *args, **kwargs):
-        logger.debug(
-            f"LogosShift: Wrapping coroutine {func.__name__}. Args: {args}, Kwargs: {kwargs}"
+    async def wrap_coroutine(self, func, dataset, *args, **kwargs):
+        func_to_call, args, kwargs, metadata = await self._wrap_common(
+            func, dataset, args, kwargs, True
         )
-        metadata = kwargs.pop("logos_shift_metadata", {})
-        metadata["function"] = func.__name__
+        result = await func_to_call(*args, **kwargs)
+        return self.handle_data(result, dataset, args, kwargs, metadata)
 
         async def async_inner(*a, **kw):
             if self.router:
