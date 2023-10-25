@@ -4,7 +4,11 @@
 
 # Logos Shift
 
+**Train and Shift your Logos Brain (LLM)**
+
 Integrating Large Language Models (LLMs) into production systems can be a convoluted process, with myriad challenges to overcome. While several tools offer call instrumentation, **Logos Shift** sets itself apart with its game-changing feature: **automated rollout of your fine-tuned model**. Just integrate with a single line of code and let us notify you when your fine-tuned model is ready for deployment.
+
+You can also do this yourself for free. LogosShift is the simplest and best way to do this for hackers.
 
 
 ## Key Feature
