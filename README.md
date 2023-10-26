@@ -151,6 +151,58 @@ logos_shift = LogosShift(api_key="YOUR_API_KEY", filename="api_calls.log")
 logos_shift = LogosShift(api_key=None, filename="api_calls.log")
 ```
 
+
+## Best Practices
+
+When using Logos Shift to integrate Large Language Models (LLMs) into your applications, it’s crucial to tailor the integration to the specific outputs and outcomes that are most relevant to your use case. Below are some best practices to help you maximize the effectiveness of Logos Shift.
+
+### Focus on Relevant Outputs
+
+When instrumenting your functions with Logos Shift, aim to return the specific parts of the output that are most pertinent to your application’s needs.
+
+#### Not Recommended:
+
+```python
+@logos_shift(dataset="story_raw")
+def get_story(model, messages):
+    """Generates a story"""
+    completion = openai.ChatCompletion.create(model=model, messages=messages)
+    return completion
+```
+
+In the above example, the entire completion object is returned, which might include a lot of information that is not directly relevant to your application.
+
+#### Recommended:
+
+```python
+@logos_shift(dataset="story")
+def get_story(model, messages):
+    """Generates a story"""
+    completion = openai.ChatCompletion.create(model=model, messages=messages)
+    result = completion.to_dict_recursive()
+    story_d = {'story': result['choices'][0]['message']}
+    return story_d
+```
+
+In this improved version, the function returns a dictionary with just the story part of the completion. This approach ensures that the data captured by Logos Shift is more concise and directly related to your application's primary function.
+
+### Providing Feedback
+
+Providing feedback on specific outcomes is crucial for fine-tuning your models and ensuring accurate A/B test rollouts.
+
+```python
+story_d = get_story()
+# ... your application logic ...
+logos_shift.provide_feedback(story_d['bohita_logos_shift_id'], "success")
+```
+
+In this example, `provide_feedback` is called with the result ID and an outcome string ("success" in this case). This helps in two ways:
+
+1. **Accurate A/B Test Measurements**: The feedback ensures that the A/B test rollouts are based on actual outcomes, providing a true measure of the model’s performance in real-world scenarios.
+2. **Targeted Fine-Tuning**: By providing feedback on specific outcomes, you help in fine-tuning the model to better suit your application’s needs, leading to more effective and efficient model performance over time.
+
+Adopting these best practices will help you leverage the full potential of Logos Shift, ensuring that your integration with LLMs is not just seamless but also highly effective and _outcome-driven_.
+
 ## Contribute
 
 Feel free to fork, open issues, and submit PRs. For major changes, please open an issue first to discuss what you'd like to change.

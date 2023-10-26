@@ -60,21 +60,29 @@ class BufferManager(metaclass=SingletonMeta):
 
     def open_handle(self, filename: str):
         if filename:
-            logdir = Path(filename).parent
+            filepath = Path(filename)
+            logdir = filepath.parent
             if not logdir.exists():
                 raise Exception(f"Directory {logdir} does not exist!")
-            self.file_handle = open(Path(filename), "a", buffering=1)
+            self.file_handle = open(filepath, "a", buffering=1)
+            logger.debug(f"Buffered file handler opened for local file {filename}")
         else:
             self.file_handle = None
 
     def __del__(self):
         if self.file_handle:
             self.file_handle.close()
+            logger.debug("Buffered file handle closed")
 
     def _write_to_local(self, data):
-        if self.file_handle:
-            for item in data:
-                self.file_handle.write(str(item) + "\n")
+        try:
+            if self.file_handle:
+                self.file_handle.write(str(data) + "\n")
+        except Exception as e:
+            logger.error(
+                "Could not save to local file. This might happen because local file format is simple. Local does str(data)"
+            )
+            logger.exception(e)
 
     @retry(wait=wait_fixed(3))
     def send_data(self, data, dataset="default"):
