@@ -46,7 +46,8 @@ class APIRouter:
             1_000,
         )  # How frequently to fetch config
         logger.info(f"Initialized {mode} router")
-        self._get_configuration()
+        # Fails in async context
+        # self._get_configuration()
 
     async def _get_configuration_common(self, is_async):
         """
